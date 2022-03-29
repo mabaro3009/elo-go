@@ -29,28 +29,28 @@ var (
 type Outcome int
 
 type Elo struct {
-	dValue      float64
-	sCalculator SCalculator
-	kCalculator KCalculator
+	dValue float64
+	s      SCalculator
+	k      KCalculator
 }
 
 // NewElo returns a new elo object.
 // kFactor is used to determine how much a player's rating can change after a match.
 // dValue affects how the difference in ratings translates to win probabilities.
-func NewElo(dValue float64, sCalculator SCalculator, kCalculator KCalculator) *Elo {
+func NewElo(dValue float64, s SCalculator, k KCalculator) *Elo {
 	return &Elo{
-		dValue:      dValue,
-		sCalculator: sCalculator,
-		kCalculator: kCalculator,
+		dValue: dValue,
+		s:      s,
+		k:      k,
 	}
 }
 
 // NewEloDefault returns a new Elo object with default fields.
 func NewEloDefault() *Elo {
 	return &Elo{
-		dValue:      DefaultDValue,
-		sCalculator: NewSCalculatorLinear(),
-		kCalculator: NewKCalculatorConst(DefaultKFactor),
+		dValue: DefaultDValue,
+		s:      NewSCalculatorLinear(),
+		k:      NewKCalculatorConst(DefaultKFactor),
 	}
 }
 
@@ -70,7 +70,7 @@ func (e *Elo) GetNewRatings(ratingA, ratingB, out int32) (int32, int32, error) {
 		return ratingA, ratingB, ErrInvalidOutcome
 	}
 
-	return e.getNewRating(ratingA, ratingB, e.sCalculator.getSValue(2, getOutcome(0, out))), e.getNewRating(ratingB, ratingA, e.sCalculator.getSValue(2, getOutcome(1, out))), nil
+	return e.getNewRating(ratingA, ratingB, e.s.getSValue(2, getOutcome(0, out))), e.getNewRating(ratingB, ratingA, e.s.getSValue(2, getOutcome(1, out))), nil
 }
 
 func getOutcome(p, o int32) Outcome {
@@ -78,15 +78,15 @@ func getOutcome(p, o int32) Outcome {
 	case 0:
 		if p == 0 {
 			return Win
-		} else {
-			return Loss
 		}
+		return Loss
+
 	case 1:
 		if p == 0 {
 			return Loss
-		} else {
-			return Win
 		}
+		return Win
+
 	default:
 		return Draw
 	}
@@ -95,7 +95,7 @@ func getOutcome(p, o int32) Outcome {
 func (e *Elo) getNewRating(ratingA, ratingB int32, s float64) int32 {
 	expScore := e.GetExpectedScore(ratingA, ratingB, 0)
 
-	return ratingA + int32(e.kCalculator.getKFactor(ratingA)*(s-expScore))
+	return ratingA + int32(e.k.getKFactor(ratingA)*(s-expScore))
 }
 
 func round(num float64) int {

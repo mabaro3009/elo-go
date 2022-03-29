@@ -1,6 +1,5 @@
 package elo
 
-
 type SCalculatorLinear struct{}
 
 func NewSCalculatorLinear() *SCalculatorLinear {

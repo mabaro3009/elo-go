@@ -5,7 +5,7 @@ This library implements an Elo rating system in Golang.
 The Elo system includes three factors that can be modified: *kfactor*, *d* and *s*.
 
 The *d* value is always a constant and the *kfactor* and *s* values can be calculated via different implementations.
-This library includes some common implementations for both, but the user may code their one.
+This library includes some common implementations for both, but the user may code their own.
 
 Example usage with default values:
 ```

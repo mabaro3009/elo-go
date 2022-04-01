@@ -9,9 +9,9 @@ func TestGetExpectedScore(t *testing.T) {
 	testcases := []struct {
 		description string
 		d           float64
-		p           int32
-		ra          int32
-		rb          int32
+		p           int
+		ra          int
+		rb          int
 		score       float64
 	}{
 		{
@@ -67,13 +67,13 @@ func TestGetNewRatings(t *testing.T) {
 	testCases := []struct {
 		description string
 		k           KCalculator
-		ra          int32
-		rb          int32
-		outcome     int32
+		ra          int
+		rb          int
+		outcome     int
 		s           SCalculator
 		expErr      error
-		expNewRa    int32
-		expNewRb    int32
+		expNewRa    int
+		expNewRb    int
 	}{
 		{
 			description: "negative Outcome",
@@ -212,93 +212,93 @@ func TestGetNewRatings(t *testing.T) {
 func TestGetNewRatingsTeams(t *testing.T) {
 	testCases := []struct {
 		description string
-		ratingsA    []int32
-		ratingsB    []int32
-		out         int32
+		ratingsA    []int
+		ratingsB    []int
+		out         int
 		expError    error
-		expRatingsA []int32
-		expRatingsB []int32
+		expRatingsA []int
+		expRatingsB []int
 	}{
 		{
 			description: "team length missmatch.",
-			ratingsA:    []int32{1500, 1500, 1500},
-			ratingsB:    []int32{1500, 1500},
+			ratingsA:    []int{1500, 1500, 1500},
+			ratingsB:    []int{1500, 1500},
 			out:         0,
 			expError:    ErrTeamLenMissmatch,
-			expRatingsA: []int32{1500, 1500, 1500},
-			expRatingsB: []int32{1500, 1500},
+			expRatingsA: []int{1500, 1500, 1500},
+			expRatingsB: []int{1500, 1500},
 		},
 		{
 			description: "invalid outcome. Negative.",
-			ratingsA:    []int32{1500, 1500},
-			ratingsB:    []int32{1500, 1500},
+			ratingsA:    []int{1500, 1500},
+			ratingsB:    []int{1500, 1500},
 			out:         -2,
 			expError:    ErrInvalidOutcome,
-			expRatingsA: []int32{1500, 1500},
-			expRatingsB: []int32{1500, 1500},
+			expRatingsA: []int{1500, 1500},
+			expRatingsB: []int{1500, 1500},
 		},
 		{
 			description: "invalid outcome. Too big.",
-			ratingsA:    []int32{1500, 1500},
-			ratingsB:    []int32{1500, 1500},
+			ratingsA:    []int{1500, 1500},
+			ratingsB:    []int{1500, 1500},
 			out:         3,
 			expError:    ErrInvalidOutcome,
-			expRatingsA: []int32{1500, 1500},
-			expRatingsB: []int32{1500, 1500},
+			expRatingsA: []int{1500, 1500},
+			expRatingsB: []int{1500, 1500},
 		},
 		{
 			description: "Same ratings. Team A wins.",
-			ratingsA:    []int32{1500, 1500},
-			ratingsB:    []int32{1500, 1500},
+			ratingsA:    []int{1500, 1500},
+			ratingsB:    []int{1500, 1500},
 			out:         0,
 			expError:    nil,
-			expRatingsA: []int32{1508, 1508},
-			expRatingsB: []int32{1492, 1492},
+			expRatingsA: []int{1508, 1508},
+			expRatingsB: []int{1492, 1492},
 		},
 		{
 			description: "Same ratings. Team B wins.",
-			ratingsA:    []int32{1500, 1500},
-			ratingsB:    []int32{1500, 1500},
+			ratingsA:    []int{1500, 1500},
+			ratingsB:    []int{1500, 1500},
 			out:         1,
 			expError:    nil,
-			expRatingsA: []int32{1492, 1492},
-			expRatingsB: []int32{1508, 1508},
+			expRatingsA: []int{1492, 1492},
+			expRatingsB: []int{1508, 1508},
 		},
 		{
 			description: "Same ratings. Draw.",
-			ratingsA:    []int32{1500, 1500},
-			ratingsB:    []int32{1500, 1500},
+			ratingsA:    []int{1500, 1500},
+			ratingsB:    []int{1500, 1500},
 			out:         2,
 			expError:    nil,
-			expRatingsA: []int32{1500, 1500},
-			expRatingsB: []int32{1500, 1500},
+			expRatingsA: []int{1500, 1500},
+			expRatingsB: []int{1500, 1500},
 		},
 		{
 			description: "Different ratings. Team A wins.",
-			ratingsA:    []int32{1500, 1800},
-			ratingsB:    []int32{1400, 1600},
+			ratingsA:    []int{1500, 1800},
+			ratingsB:    []int{1400, 1600},
 			out:         0,
 			expError:    nil,
-			expRatingsA: []int32{1505, 1804},
-			expRatingsB: []int32{1396, 1595},
+			expRatingsA: []int{1505, 1804},
+			expRatingsB: []int{1396, 1595},
 		},
 		{
 			description: "Different ratings. Team B wins.",
-			ratingsA:    []int32{1500, 1800},
-			ratingsB:    []int32{1400, 1600},
+			ratingsA:    []int{1500, 1800},
+			ratingsB:    []int{1400, 1600},
 			out:         1,
 			expError:    nil,
-			expRatingsA: []int32{1490, 1788},
-			expRatingsB: []int32{1412, 1610},
+			expRatingsA: []int{1490, 1788},
+			expRatingsB: []int{1412, 1610},
 		},
 		{
 			description: "Different ratings. Draw.",
-			ratingsA:    []int32{1500, 1800},
-			ratingsB:    []int32{1400, 1600},
+			ratingsA:    []int{1500, 1800},
+			ratingsB:    []int{1400, 1600},
 			out:         2,
 			expError:    nil,
-			expRatingsA: []int32{1497, 1797},
-			expRatingsB: []int32{1403, 1603},
+			expRatingsA: []int{1497, 1797},
+			expRatingsB: []int{1403, 1603},
 		},
 	}
 
@@ -315,6 +315,6 @@ func TestGetNewRatingsTeams(t *testing.T) {
 
 type sCalculatorMock struct{}
 
-func (c *sCalculatorMock) getSValue(_ int32, _ Outcome) float64 {
+func (c *sCalculatorMock) getSValue(_ int, _ Outcome) float64 {
 	return 1
 }

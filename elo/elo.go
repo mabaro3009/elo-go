@@ -6,11 +6,11 @@ import (
 )
 
 type SCalculator interface {
-	getSValue(n int32, o Outcome) float64
+	getSValue(n int, o Outcome) float64
 }
 
 type KCalculator interface {
-	getKFactor(rating int32) float64
+	getKFactor(rating int) float64
 }
 
 const (
@@ -59,14 +59,14 @@ func NewEloDefault() *Elo {
 // ratingA is the elo rating of playerA and ratingB is the elo rating of playerB
 // precision determines with how many decimals the expected scores are returned.
 // Return value ranges from 0 to 1. A value of 0.75 indicates that playerA has an expected 75% chance of winning.
-func (e *Elo) GetExpectedScore(ratingA, ratingB, precision int32) float64 {
+func (e *Elo) GetExpectedScore(ratingA, ratingB, precision int) float64 {
 	return toFixed(1/(1+math.Pow(10, float64(ratingB-ratingA)/e.dValue)), precision)
 }
 
 // GetNewRatings returns the new rating for playerA and playerB
 // ratingA is the elo rating of playerA and ratingB is the elo rating of playerB
 // Outcome is the result of the match. 0 for playerA Win, 1 for playerB Win and 2 for Draw.
-func (e *Elo) GetNewRatings(ratingA, ratingB, out int32) (int32, int32, error) {
+func (e *Elo) GetNewRatings(ratingA, ratingB, out int) (int, int, error) {
 	if out < 0 || out > 2 {
 		return ratingA, ratingB, ErrInvalidOutcome
 	}
@@ -77,7 +77,7 @@ func (e *Elo) GetNewRatings(ratingA, ratingB, out int32) (int32, int32, error) {
 // GetNewRatingsTeams returns the new ratings for each player in a team match.
 // ratingsA are the elo ratings of players in teamA and ratingsB are the elo rating of players in teamB.
 // Outcome is the result of the match. 0 for teamA Win, 1 for teamB Win and 2 for Draw.
-func (e *Elo) GetNewRatingsTeams(ratingsA, ratingsB []int32, out int32) ([]int32, []int32, error) {
+func (e *Elo) GetNewRatingsTeams(ratingsA, ratingsB []int, out int) ([]int, []int, error) {
 	if len(ratingsA) != len(ratingsB) {
 		return ratingsA, ratingsB, ErrTeamLenMissmatch
 	}
@@ -92,13 +92,13 @@ func (e *Elo) GetNewRatingsTeams(ratingsA, ratingsB []int32, out int32) ([]int32
 	outcomeB := getOutcome(1, out)
 
 	incrementA := e.getIncrement(avgA, avgB, e.s.getSValue(2, outcomeA))
-	newRatingsA := make([]int32, 0, len(ratingsA))
+	newRatingsA := make([]int, 0, len(ratingsA))
 	for i := range ratingsA {
 		newRatingsA = append(newRatingsA, e.getNewIndividualRating(incrementA, i, ratingsA, outcomeA))
 	}
 
 	incrementB := e.getIncrement(avgB, avgA, e.s.getSValue(2, outcomeB))
-	newRatingsB := make([]int32, 0, len(ratingsB))
+	newRatingsB := make([]int, 0, len(ratingsB))
 	for i := range ratingsB {
 		newRatingsB = append(newRatingsB, e.getNewIndividualRating(incrementB, i, ratingsB, outcomeB))
 	}
@@ -106,7 +106,7 @@ func (e *Elo) GetNewRatingsTeams(ratingsA, ratingsB []int32, out int32) ([]int32
 	return newRatingsA, newRatingsB, nil
 }
 
-func getOutcome(p, o int32) Outcome {
+func getOutcome(p, o int) Outcome {
 	switch o {
 	case 0:
 		if p == 0 {
@@ -125,28 +125,28 @@ func getOutcome(p, o int32) Outcome {
 	}
 }
 
-func (e *Elo) getNewRating(ratingA, ratingB int32, s float64) int32 {
+func (e *Elo) getNewRating(ratingA, ratingB int, s float64) int {
 	return ratingA + e.getIncrement(ratingA, ratingB, s)
 }
 
-func (e *Elo) getNewIndividualRating(totalIncrement int32, i int, ratings []int32, o Outcome) int32 {
+func (e *Elo) getNewIndividualRating(totalIncrement, i int, ratings []int, o Outcome) int {
 	ratio := getRatio(i, ratings, o)
 	increment := math.Round(ratio * float64(totalIncrement))
 
-	return ratings[i] + int32(increment)
+	return ratings[i] + int(increment)
 }
 
-func (e *Elo) getIncrement(ratingA, ratingB int32, s float64) int32 {
+func (e *Elo) getIncrement(ratingA, ratingB int, s float64) int {
 	expScore := e.GetExpectedScore(ratingA, ratingB, 0)
 
-	return int32(e.k.getKFactor(ratingA) * (s - expScore))
+	return int(e.k.getKFactor(ratingA) * (s - expScore))
 }
 
 func round(num float64) int {
 	return int(num + math.Copysign(0.5, num))
 }
 
-func toFixed(num float64, precision int32) float64 {
+func toFixed(num float64, precision int) float64 {
 	if precision == 0 {
 		return num
 	}
@@ -154,11 +154,11 @@ func toFixed(num float64, precision int32) float64 {
 	return float64(round(num*output)) / output
 }
 
-func getAverage(in []int32) int32 {
-	return getSum(in) / int32(len(in))
+func getAverage(in []int) int {
+	return getSum(in) / len(in)
 }
 
-func getRatio(i int, sl []int32, o Outcome) float64 {
+func getRatio(i int, sl []int, o Outcome) float64 {
 	var index int
 	switch o {
 	case Loss:
@@ -171,8 +171,8 @@ func getRatio(i int, sl []int32, o Outcome) float64 {
 	return float64(a) / float64(sum)
 }
 
-func getSum(in []int32) int32 {
-	var sum int32
+func getSum(in []int) int {
+	var sum int
 	for _, a := range in {
 		sum += a
 	}

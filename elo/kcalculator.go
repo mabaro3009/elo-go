@@ -8,7 +8,7 @@ func NewKCalculatorConst(k float64) *KCalculatorConst {
 	return &KCalculatorConst{k: k}
 }
 
-func (c *KCalculatorConst) getKFactor(_ int32) float64 {
+func (c *KCalculatorConst) getKFactor(_ int) float64 {
 	return c.k
 }
 
@@ -18,7 +18,7 @@ func NewKCalculatorUSCF() *KCalculatorUSCF {
 	return &KCalculatorUSCF{}
 }
 
-func (c *KCalculatorUSCF) getKFactor(rating int32) float64 {
+func (c *KCalculatorUSCF) getKFactor(rating int) float64 {
 	switch {
 	case rating < 2100:
 		return 32
@@ -35,7 +35,7 @@ func NewKCalculatorFIDESimplified() *KCalculatorFIDESimplified {
 	return &KCalculatorFIDESimplified{}
 }
 
-func (c *KCalculatorFIDESimplified) getKFactor(rating int32) float64 {
+func (c *KCalculatorFIDESimplified) getKFactor(rating int) float64 {
 	switch {
 	case rating < 2300:
 		return 40

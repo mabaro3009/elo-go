@@ -26,8 +26,8 @@ expScore := e.GetExpectedScore(1750, 1500, 2)
 newRatingA, newRatingB, err := e.GetNewRatings(1750, 1500, 0)
 
 
-teamA := []int32{1000, 1500}
-teamB := []int32{1300, 1400}
+teamA := []int{1000, 1500}
+teamB := []int{1300, 1400}
 
 // Get the new ratings when teamA beats teamB in a 2vs2 match.
 newRatingsA, newRatingsB, err := e.GetNewRatingsTeams(teamA, teamB, 0)
@@ -40,10 +40,10 @@ Example initializacion with custom values:
 type kCalculatorCustom struct {
     minValue float64
     maxValue float64
-    threshhold int32
+    threshhold int
 }
 
-func newKCalculatorCustom(minValue, maxValue float64, threshhold int32) *kCalculatorCustom {
+func newKCalculatorCustom(minValue, maxValue float64, threshhold int) *kCalculatorCustom {
     return &kCalculatorCustom {
         minValue: minValue,
         maxValue: maxValue,
@@ -51,7 +51,7 @@ func newKCalculatorCustom(minValue, maxValue float64, threshhold int32) *kCalcul
     }
 }
 
-func (c *kCalculatorCustom) getKFactor(rating int32) float64 {
+func (c *kCalculatorCustom) getKFactor(rating int) float64 {
     if rating < c.threshhold {
         return c.minValue
     }

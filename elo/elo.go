@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	ErrInvalidOutcome   = errors.New("invalid Outcome, must be 0, 1 or 2")
+	ErrInvalidOutcome   = errors.New("invalid outcome, must be 0, 1 or 2")
 	ErrTeamLenMissmatch = errors.New("teams are not of the same length")
 )
 

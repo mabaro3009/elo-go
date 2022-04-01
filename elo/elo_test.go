@@ -209,6 +209,110 @@ func TestGetNewRatings(t *testing.T) {
 	}
 }
 
+func TestGetNewRatingsTeams(t *testing.T) {
+	testCases := []struct {
+		description string
+		ratingsA    []int32
+		ratingsB    []int32
+		out         int32
+		expError    error
+		expRatingsA []int32
+		expRatingsB []int32
+	}{
+		{
+			description: "team length missmatch.",
+			ratingsA:    []int32{1500, 1500, 1500},
+			ratingsB:    []int32{1500, 1500},
+			out:         0,
+			expError:    ErrTeamLenMissmatch,
+			expRatingsA: []int32{1500, 1500, 1500},
+			expRatingsB: []int32{1500, 1500},
+		},
+		{
+			description: "invalid outcome. Negative.",
+			ratingsA:    []int32{1500, 1500},
+			ratingsB:    []int32{1500, 1500},
+			out:         -2,
+			expError:    ErrInvalidOutcome,
+			expRatingsA: []int32{1500, 1500},
+			expRatingsB: []int32{1500, 1500},
+		},
+		{
+			description: "invalid outcome. Too big.",
+			ratingsA:    []int32{1500, 1500},
+			ratingsB:    []int32{1500, 1500},
+			out:         3,
+			expError:    ErrInvalidOutcome,
+			expRatingsA: []int32{1500, 1500},
+			expRatingsB: []int32{1500, 1500},
+		},
+		{
+			description: "Same ratings. Team A wins.",
+			ratingsA:    []int32{1500, 1500},
+			ratingsB:    []int32{1500, 1500},
+			out:         0,
+			expError:    nil,
+			expRatingsA: []int32{1508, 1508},
+			expRatingsB: []int32{1492, 1492},
+		},
+		{
+			description: "Same ratings. Team B wins.",
+			ratingsA:    []int32{1500, 1500},
+			ratingsB:    []int32{1500, 1500},
+			out:         1,
+			expError:    nil,
+			expRatingsA: []int32{1492, 1492},
+			expRatingsB: []int32{1508, 1508},
+		},
+		{
+			description: "Same ratings. Draw.",
+			ratingsA:    []int32{1500, 1500},
+			ratingsB:    []int32{1500, 1500},
+			out:         2,
+			expError:    nil,
+			expRatingsA: []int32{1500, 1500},
+			expRatingsB: []int32{1500, 1500},
+		},
+		{
+			description: "Different ratings. Team A wins.",
+			ratingsA:    []int32{1500, 1800},
+			ratingsB:    []int32{1400, 1600},
+			out:         0,
+			expError:    nil,
+			expRatingsA: []int32{1505, 1804},
+			expRatingsB: []int32{1396, 1595},
+		},
+		{
+			description: "Different ratings. Team B wins.",
+			ratingsA:    []int32{1500, 1800},
+			ratingsB:    []int32{1400, 1600},
+			out:         1,
+			expError:    nil,
+			expRatingsA: []int32{1490, 1788},
+			expRatingsB: []int32{1412, 1610},
+		},
+		{
+			description: "Different ratings. Draw.",
+			ratingsA:    []int32{1500, 1800},
+			ratingsB:    []int32{1400, 1600},
+			out:         2,
+			expError:    nil,
+			expRatingsA: []int32{1497, 1797},
+			expRatingsB: []int32{1403, 1603},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			elo := NewEloDefault()
+			newRA, newRB, err := elo.GetNewRatingsTeams(tc.ratingsA, tc.ratingsB, tc.out)
+			assert.ErrorIs(t, err, tc.expError)
+			assert.Equal(t, tc.expRatingsA, newRA)
+			assert.Equal(t, tc.expRatingsB, newRB)
+		})
+	}
+}
+
 type sCalculatorMock struct{}
 
 func (c *sCalculatorMock) getSValue(_ int32, _ Outcome) float64 {

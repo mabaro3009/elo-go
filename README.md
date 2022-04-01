@@ -24,6 +24,13 @@ expScore := e.GetExpectedScore(1750, 1500, 2)
 // Use 0 to indicate the first player wins, 1 for the second player
 // and 2 for a draw.
 newRatingA, newRatingB, err := e.GetNewRatings(1750, 1500, 0)
+
+
+teamA := []int32{1000, 1500}
+teamB := []int32{1300, 1400}
+
+// Get the new ratings when teamA beats teamB in a 2vs2 match.
+newRatingsA, newRatingsB, err := e.GetNewRatingsTeams(teamA, teamB, 0)
 ```
 
 Example initializacion with custom values:

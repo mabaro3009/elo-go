@@ -68,12 +68,20 @@ func (e *Elo) GetExpectedScore(ratingA, ratingB, precision int) float64 {
 // GetNewRatings returns the new rating for playerA and playerB
 // ratingA is the elo rating of playerA and ratingB is the elo rating of playerB
 // Outcome is the result of the match. 0 for playerA Win, 1 for playerB Win and 2 for Draw.
-func (e *Elo) GetNewRatings(ratingA, ratingB, out int) (int, int, error) {
-	if out < 0 || out > 2 {
-		return ratingA, ratingB, ErrInvalidOutcome
+func (e *Elo) GetNewRatings(ratings []int, out int) ([]int, error) {
+	if out < 0 || out > len(ratings) {
+		return ratings, ErrInvalidOutcome
 	}
 
-	return e.getNewRating(ratingA, ratingB, 2, e.s.getSValue(2, getOutcome(0, out, 2))), e.getNewRating(ratingB, ratingA, 2, e.s.getSValue(2, getOutcome(1, out, 2))), nil
+	n := len(ratings)
+	newRatings := make([]int, 0, n)
+	for i, rating := range ratings {
+		avg := getAverageExcluding(ratings, i)
+		outcome := getOutcome(i, out, n)
+		newRatings = append(newRatings, e.getNewRating(rating, avg, len(ratings), e.s.getSValue(n, outcome)))
+	}
+
+	return newRatings, nil
 }
 
 // GetNewRatingsTeams returns the new ratings for each player in a team match.
@@ -100,22 +108,6 @@ func (e *Elo) GetNewRatingsTeams(ratingsA, ratingsB []int, out int) ([]int, []in
 	newRatingsB := e.getNewIndividualRatings(incrementB, ratingsB)
 
 	return newRatingsA, newRatingsB, nil
-}
-
-func (e *Elo) GetNewRatingsMulti(ratings []int, out int) ([]int, error) {
-	if out < 0 || out > len(ratings) {
-		return ratings, ErrInvalidOutcome
-	}
-
-	n := len(ratings)
-	newRatings := make([]int, 0, n)
-	for i, rating := range ratings {
-		avg := getAverageExcluding(ratings, i)
-		outcome := getOutcome(i, out, n)
-		newRatings = append(newRatings, e.getNewRating(rating, avg, len(ratings), e.s.getSValue(n, outcome)))
-	}
-
-	return newRatings, nil
 }
 
 func getOutcome(i, o, l int) Outcome {

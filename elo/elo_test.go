@@ -67,150 +67,120 @@ func TestGetNewRatings(t *testing.T) {
 	testCases := []struct {
 		description string
 		k           KCalculator
-		ra          int
-		rb          int
+		r           []int
 		outcome     int
 		s           SCalculator
 		expErr      error
-		expNewRa    int
-		expNewRb    int
+		expNewR     []int
 	}{
 		{
 			description: "negative Outcome",
 			k:           NewKCalculatorConst(DefaultKFactor),
-			ra:          1500,
-			rb:          1500,
+			r:           []int{1500, 1500},
 			outcome:     -1,
 			s:           NewSCalculatorLinear(),
 			expErr:      ErrInvalidOutcome,
-			expNewRa:    1500,
-			expNewRb:    1500,
+			expNewR:     []int{1500, 1500},
 		},
 		{
 			description: "invalid Outcome",
 			k:           NewKCalculatorConst(DefaultKFactor),
-			ra:          1500,
-			rb:          1500,
+			r:           []int{1500, 1500},
 			outcome:     3,
 			s:           NewSCalculatorLinear(),
 			expErr:      ErrInvalidOutcome,
-			expNewRa:    1500,
-			expNewRb:    1500,
+			expNewR:     []int{1500, 1500},
 		},
 		{
 			description: "same rating, playerA wins",
 			k:           NewKCalculatorConst(DefaultKFactor),
-			ra:          1500,
-			rb:          1500,
+			r:           []int{1500, 1500},
 			outcome:     0,
 			s:           NewSCalculatorLinear(),
 			expErr:      nil,
-			expNewRa:    1516,
-			expNewRb:    1484,
+			expNewR:     []int{1516, 1484},
 		},
 		{
 			description: "same rating, playerA wins with non-default k factor",
 			k:           NewKCalculatorConst(40),
-			ra:          1500,
-			rb:          1500,
+			r:           []int{1500, 1500},
 			outcome:     0,
 			s:           NewSCalculatorLinear(),
 			expErr:      nil,
-			expNewRa:    1520,
-			expNewRb:    1480,
+			expNewR:     []int{1520, 1480},
 		},
 		{
 			description: "same rating, playerB wins",
 			k:           NewKCalculatorConst(DefaultKFactor),
-			ra:          1500,
-			rb:          1500,
+			r:           []int{1500, 1500},
 			outcome:     1,
 			s:           NewSCalculatorLinear(),
 			expErr:      nil,
-			expNewRa:    1484,
-			expNewRb:    1516,
+			expNewR:     []int{1484, 1516},
 		},
 		{
 			description: "same rating, Draw",
 			k:           NewKCalculatorConst(DefaultKFactor),
-			ra:          1500,
-			rb:          1500,
+			r:           []int{1500, 1500},
 			outcome:     2,
 			s:           NewSCalculatorLinear(),
 			expErr:      nil,
-			expNewRa:    1500,
-			expNewRb:    1500,
+			expNewR:     []int{1500, 1500},
 		},
 		{
 			description: "same rating, with mock s",
 			k:           NewKCalculatorConst(DefaultKFactor),
-			ra:          1500,
-			rb:          1500,
+			r:           []int{1500, 1500},
 			outcome:     2,
 			s:           &sCalculatorMock{},
 			expErr:      nil,
-			expNewRa:    1516,
-			expNewRb:    1516,
+			expNewR:     []int{1516, 1516},
 		},
 		{
 			description: "ratingA is higher, playerA wins",
 			k:           NewKCalculatorConst(DefaultKFactor),
-			ra:          2200,
-			rb:          1900,
+			r:           []int{2200, 1900},
 			outcome:     0,
 			s:           NewSCalculatorLinear(),
 			expErr:      nil,
-			expNewRa:    2204,
-			expNewRb:    1896,
+			expNewR:     []int{2204, 1896},
 		},
 		{
 			description: "ratingA is higher, playerB wins",
 			k:           NewKCalculatorConst(DefaultKFactor),
-			ra:          2200,
-			rb:          1900,
+			r:           []int{2200, 1900},
 			outcome:     1,
 			s:           NewSCalculatorLinear(),
 			expErr:      nil,
-			expNewRa:    2173,
-			expNewRb:    1927,
+			expNewR:     []int{2173, 1927},
 		},
 		{
 			description: "ratingA is higher, Draw",
 			k:           NewKCalculatorConst(DefaultKFactor),
-			ra:          2200,
-			rb:          1900,
+			r:           []int{2200, 1900},
 			outcome:     2,
 			s:           NewSCalculatorLinear(),
 			expErr:      nil,
-			expNewRa:    2189,
-			expNewRb:    1911,
+			expNewR:     []int{2189, 1911},
 		},
 		{
 			description: "ratingA is higher, a wins, USCF kFactor",
 			k:           NewKCalculatorUSCF(),
-			ra:          2200,
-			rb:          1900,
+			r:           []int{2200, 1900},
 			outcome:     2,
 			s:           NewSCalculatorLinear(),
 			expErr:      nil,
-			expNewRa:    2192,
-			expNewRb:    1911,
+			expNewR:     []int{2192, 1911},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
 			elo := NewElo(DefaultDValue, tc.s, tc.k)
-			newRa, newRb, err := elo.GetNewRatings(tc.ra, tc.rb, tc.outcome)
-			assert.ErrorIs(t, err, tc.expErr)
-			assert.Equal(t, tc.expNewRa, newRa)
-			assert.Equal(t, tc.expNewRb, newRb)
 
-			ratings := []int{tc.ra, tc.rb}
-			newRatings, err := elo.GetNewRatingsMulti(ratings, tc.outcome)
+			newRatings, err := elo.GetNewRatings(tc.r, tc.outcome)
 			assert.ErrorIs(t, err, tc.expErr)
-			assert.Equal(t, tc.expNewRa, newRatings[0])
-			assert.Equal(t, tc.expNewRb, newRatings[1])
+			assert.Equal(t, tc.expNewR, newRatings)
 		})
 	}
 }

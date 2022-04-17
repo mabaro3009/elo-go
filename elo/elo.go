@@ -2,7 +2,6 @@ package elo
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"sort"
 )
@@ -63,7 +62,6 @@ func NewEloDefault() *Elo {
 // precision determines with how many decimals the expected scores are returned.
 // Return value ranges from 0 to 1. A value of 0.75 indicates that playerA has an expected 75% chance of winning.
 func (e *Elo) GetExpectedScore(ratingA, ratingB, precision int) float64 {
-	fmt.Println("expected score", ratingA, ratingB)
 	return toFixed(1/(1+math.Pow(10, float64(ratingB-ratingA)/e.dValue)), precision)
 }
 
@@ -75,7 +73,7 @@ func (e *Elo) GetNewRatings(ratingA, ratingB, out int) (int, int, error) {
 		return ratingA, ratingB, ErrInvalidOutcome
 	}
 
-	return e.getNewRating(ratingA, ratingB, e.s.getSValue(2, getOutcome(0, out))), e.getNewRating(ratingB, ratingA, e.s.getSValue(2, getOutcome(1, out))), nil
+	return e.getNewRating(ratingA, ratingB, 2, e.s.getSValue(2, getOutcome(0, out, 2))), e.getNewRating(ratingB, ratingA, 2, e.s.getSValue(2, getOutcome(1, out, 2))), nil
 }
 
 // GetNewRatingsTeams returns the new ratings for each player in a team match.
@@ -89,42 +87,50 @@ func (e *Elo) GetNewRatingsTeams(ratingsA, ratingsB []int, out int) ([]int, []in
 	avgA := getAverage(ratingsA)
 	avgB := getAverage(ratingsB)
 
-	outcomeA := getOutcome(0, out)
-	outcomeB := getOutcome(1, out)
+	outcomeA := getOutcome(0, out, 2)
+	outcomeB := getOutcome(1, out, 2)
 
 	modifierA := getModifier(len(ratingsA), len(ratingsB))
 	modifierB := getModifier(len(ratingsB), len(ratingsA))
 
-	incrementA := e.getIncrement(avgA, avgB, e.s.getSValue(2, outcomeA), modifierA, modifierB)
+	incrementA := e.getIncrement(avgA, avgB, 2, e.s.getSValue(2, outcomeA), modifierA, modifierB)
 	newRatingsA := e.getNewIndividualRatings(incrementA, ratingsA)
 
-	incrementB := e.getIncrement(avgB, avgA, e.s.getSValue(2, outcomeB), modifierB, modifierA)
+	incrementB := e.getIncrement(avgB, avgA, 2, e.s.getSValue(2, outcomeB), modifierB, modifierA)
 	newRatingsB := e.getNewIndividualRatings(incrementB, ratingsB)
 
 	return newRatingsA, newRatingsB, nil
 }
 
-func getOutcome(p, o int) Outcome {
-	switch o {
-	case 0:
-		if p == 0 {
-			return Win
-		}
-		return Loss
-
-	case 1:
-		if p == 0 {
-			return Loss
-		}
-		return Win
-
-	default:
-		return Draw
+func (e *Elo) GetNewRatingsMulti(ratings []int, out int) ([]int, error) {
+	if out < 0 || out > len(ratings) {
+		return ratings, ErrInvalidOutcome
 	}
+
+	n := len(ratings)
+	newRatings := make([]int, 0, n)
+	for i, rating := range ratings {
+		avg := getAverageExcluding(ratings, i)
+		outcome := getOutcome(i, out, n)
+		newRatings = append(newRatings, e.getNewRating(rating, avg, len(ratings), e.s.getSValue(n, outcome)))
+	}
+
+	return newRatings, nil
 }
 
-func (e *Elo) getNewRating(ratingA, ratingB int, s float64) int {
-	return ratingA + e.getIncrement(ratingA, ratingB, s, 1, 1)
+func getOutcome(i, o, l int) Outcome {
+	if i == o {
+		return Win
+	}
+	if o == l {
+		return Draw
+	}
+
+	return Loss
+}
+
+func (e *Elo) getNewRating(ratingA, ratingB, n int, s float64) int {
+	return ratingA + e.getIncrement(ratingA, ratingB, n, s, 1, 1)
 }
 
 type sortedRating struct {
@@ -189,10 +195,10 @@ func (e *Elo) getNewIndividualRatings(totalIncrement int, ratings []int) []int {
 	return newRatings
 }
 
-func (e *Elo) getIncrement(ratingA, ratingB int, s, mA, mB float64) int {
+func (e *Elo) getIncrement(ratingA, ratingB, n int, s, mA, mB float64) int {
 	expScore := e.GetExpectedScore(int(float64(ratingA)*mA), int(float64(ratingB)*mB), 0)
 
-	return int(e.k.getKFactor(ratingA) * (s - expScore))
+	return int(e.k.getKFactor(ratingA)*(s-expScore)) * (n - 1)
 }
 
 func round(num float64) int {
@@ -205,6 +211,14 @@ func toFixed(num float64, precision int) float64 {
 	}
 	output := math.Pow(10, float64(precision))
 	return float64(round(num*output)) / output
+}
+
+func getAverageExcluding(in []int, i int) int {
+	excl := make([]int, len(in))
+	copy(excl, in)
+	excl[i] = excl[len(excl)-1]
+
+	return getAverage(excl[:len(excl)-1])
 }
 
 func getAverage(in []int) int {

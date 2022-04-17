@@ -205,6 +205,12 @@ func TestGetNewRatings(t *testing.T) {
 			assert.ErrorIs(t, err, tc.expErr)
 			assert.Equal(t, tc.expNewRa, newRa)
 			assert.Equal(t, tc.expNewRb, newRb)
+
+			ratings := []int{tc.ra, tc.rb}
+			newRatings, err := elo.GetNewRatingsMulti(ratings, tc.outcome)
+			assert.ErrorIs(t, err, tc.expErr)
+			assert.Equal(t, tc.expNewRa, newRatings[0])
+			assert.Equal(t, tc.expNewRb, newRatings[1])
 		})
 	}
 }

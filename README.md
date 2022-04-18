@@ -23,14 +23,21 @@ expScore := e.GetExpectedScore(1750, 1500, 2)
 // a player with a rating of 1500.
 // Use 0 to indicate the first player wins, 1 for the second player
 // and 2 for a draw.
-newRatingA, newRatingB, err := e.GetNewRatings(1750, 1500, 0)
+ratings := []int{1750, 1500}
+newRatiings, err := e.GetNewRatings(ratings, 0)
 
 
 teamA := []int{1000, 1500}
 teamB := []int{1300, 1400}
+ratings := [][]int{teamA, teamB}
 
-// Get the new ratings when teamA beats teamB in a 2vs2 match.
-newRatingsA, newRatingsB, err := e.GetNewRatingsTeams(teamA, teamB, 0)
+// Get the new ratings when teamB beats teamA in a 2vs2 match.
+newRatings, err := e.GetNewRatingsTeams(ratings, 1)
+
+
+// Get the new ratings when there is a draw in a 1vs1vs1 match.
+ratings := []int{1000, 1200, 1500}
+newRatiings, err := e.GetNewRatings(ratings, 3)
 ```
 
 Example initializacion with custom values:

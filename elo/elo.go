@@ -65,9 +65,9 @@ func (e *Elo) GetExpectedScore(ratingA, ratingB, precision int) float64 {
 	return toFixed(1/(1+math.Pow(10, float64(ratingB-ratingA)/e.dValue)), precision)
 }
 
-// GetNewRatings returns the new rating for playerA and playerB
-// ratingA is the elo rating of playerA and ratingB is the elo rating of playerB
-// Outcome is the result of the match. 0 for playerA Win, 1 for playerB Win and 2 for Draw.
+// GetNewRatings returns the new rating for playerA and playerB.
+// Each element of ratings represents the rating of each player. ratings[i] is the rating of player i.
+// Outcome is the result of the match. i for playerI Win and len(ratings) for Draw.
 func (e *Elo) GetNewRatings(ratings []int, out int) ([]int, error) {
 	if out < 0 || out > len(ratings) {
 		return ratings, ErrInvalidOutcome
@@ -85,29 +85,29 @@ func (e *Elo) GetNewRatings(ratings []int, out int) ([]int, error) {
 }
 
 // GetNewRatingsTeams returns the new ratings for each player in a team match.
-// ratingsA are the elo ratings of players in teamA and ratingsB are the elo rating of players in teamB.
-// Outcome is the result of the match. 0 for teamA Win, 1 for teamB Win and 2 for Draw.
-func (e *Elo) GetNewRatingsTeams(ratingsA, ratingsB []int, out int) ([]int, []int, error) {
-	if out < 0 || out > 2 {
-		return ratingsA, ratingsB, ErrInvalidOutcome
+// Each slice in matrix ratings represents the ratings of each team. ratings[i] are the ratings of team i.
+// Outcome is the result of the match. i for teamI win, len(ratings) for draw.
+func (e *Elo) GetNewRatingsTeams(ratings [][]int, out int) ([][]int, error) {
+	if out < 0 || out > len(ratings) {
+		return ratings, ErrInvalidOutcome
 	}
 
-	avgA := getAverage(ratingsA)
-	avgB := getAverage(ratingsB)
+	n := len(ratings)
+	newRatings := make([][]int, 0, n)
+	for i, ratingsTeam := range ratings {
+		avg := getAverage(ratingsTeam)
+		avgRest := getMatrixAverageExcluding(ratings, i)
+		outcome := getOutcome(i, out, n)
 
-	outcomeA := getOutcome(0, out, 2)
-	outcomeB := getOutcome(1, out, 2)
+		avgLen := getAverageLenExcluding(ratings, i)
+		modifier := getModifier(len(ratingsTeam), avgLen)
+		modifierRest := getModifier(avgLen, len(ratingsTeam))
+		increment := e.getIncrement(avg, avgRest, n, e.s.getSValue(2, outcome), modifier, modifierRest)
 
-	modifierA := getModifier(len(ratingsA), len(ratingsB))
-	modifierB := getModifier(len(ratingsB), len(ratingsA))
+		newRatings = append(newRatings, e.getNewIndividualRatings(increment, ratingsTeam))
+	}
 
-	incrementA := e.getIncrement(avgA, avgB, 2, e.s.getSValue(2, outcomeA), modifierA, modifierB)
-	newRatingsA := e.getNewIndividualRatings(incrementA, ratingsA)
-
-	incrementB := e.getIncrement(avgB, avgA, 2, e.s.getSValue(2, outcomeB), modifierB, modifierA)
-	newRatingsB := e.getNewIndividualRatings(incrementB, ratingsB)
-
-	return newRatingsA, newRatingsB, nil
+	return newRatings, nil
 }
 
 func getOutcome(i, o, l int) Outcome {
@@ -205,12 +205,36 @@ func toFixed(num float64, precision int) float64 {
 	return float64(round(num*output)) / output
 }
 
+func getMatrixAverageExcluding(in [][]int, i int) int {
+	averages := make([]int, 0, len(in))
+	for j, aux := range in {
+		if i == j {
+			continue
+		}
+		averages = append(averages, getAverage(aux))
+	}
+
+	return getAverage(averages)
+}
+
 func getAverageExcluding(in []int, i int) int {
 	excl := make([]int, len(in))
 	copy(excl, in)
 	excl[i] = excl[len(excl)-1]
 
 	return getAverage(excl[:len(excl)-1])
+}
+
+func getAverageLenExcluding(in [][]int, i int) int {
+	excl := make([]int, 0, len(in))
+	for j, v := range in {
+		if i == j {
+			continue
+		}
+		excl = append(excl, len(v))
+	}
+
+	return getAverage(excl)
 }
 
 func getAverage(in []int) int {

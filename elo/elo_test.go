@@ -326,10 +326,11 @@ func TestGetNewRatingsTeams(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
 			elo := NewEloDefault()
-			newRA, newRB, err := elo.GetNewRatingsTeams(tc.ratingsA, tc.ratingsB, tc.out)
+
+			newRatings, err := elo.GetNewRatingsTeams([][]int{tc.ratingsA, tc.ratingsB}, tc.out)
 			assert.ErrorIs(t, err, tc.expError)
-			assert.Equal(t, tc.expRatingsA, newRA)
-			assert.Equal(t, tc.expRatingsB, newRB)
+			assert.Equal(t, tc.expRatingsA, newRatings[0])
+			assert.Equal(t, tc.expRatingsB, newRatings[1])
 		})
 	}
 }
